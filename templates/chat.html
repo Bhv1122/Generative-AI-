@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>My AI Companion - Conversation Hub</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Local styles & scripts -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+    <script>
+        window.userThemePreference = "{{ theme_preference }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+<body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container overflow-hidden h-screen flex flex-col">
+    
+    <!-- TopAppBar -->
+    <header class="fixed top-0 left-0 w-full z-40 flex justify-between items-center px-6 md:px-8 py-2 bg-surface/80 backdrop-blur-xl h-16 border-b border-outline-variant/10">
+        <div class="flex items-center gap-4">
+            <span class="font-headline-md text-headline-md font-bold text-primary">My AI Companion</span>
+            <div class="hidden md:flex items-center gap-2 px-3 py-1 bg-surface-container rounded-full">
+                <span class="w-2 h-2 rounded-full bg-primary ai-status-pulse"></span>
+                <span class="font-label-sm text-label-sm text-on-surface-variant">Connected &amp; ready to chat</span>
+            </div>
+        </div>
+        <div class="flex items-center gap-2">
+            <!-- Theme Cycler -->
+            <button onclick="cycleTheme()" class="p-2 rounded-full hover:bg-surface-variant/20 transition-colors active:scale-95 duration-150 text-primary" title="Cycle Theme (Light / Dark / System)">
+                <span class="material-symbols-outlined">contrast</span>
+            </button>
+            <button class="p-2 rounded-full hover:bg-surface-variant/20 transition-colors active:scale-95 duration-150 text-primary">
+                <span class="material-symbols-outlined">notifications</span>
+            </button>
+            <button onclick="window.location.href='/auth/logout'" class="p-2 rounded-full hover:bg-error-container/20 text-error transition-colors active:scale-95 duration-150" title="Log Out">
+                <span class="material-symbols-outlined">logout</span>
+            </button>
+        </div>
+    </header>
+
+    <div class="flex flex-1 pt-16 overflow-hidden">
+        <!-- SideNavBar (Hidden on Mobile) -->
+        <aside class="fixed left-0 top-0 h-full flex flex-col p-6 z-30 bg-surface-container w-64 border-r border-outline-variant/30 rounded-r-xl hidden md:flex">
+            <div class="mt-16 mb-8">
+                <button onclick="newChatSession()" class="w-full py-4 px-6 rounded-lg bg-primary text-on-primary font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-in-out hover:shadow-lg hover:shadow-primary/20 active:scale-95">
+                    <span class="material-symbols-outlined">add</span>
+                    <span>New Chat</span>
+                </button>
+            </div>
+            <nav class="flex-1 space-y-2 overflow-y-auto">
+                <div class="px-2 pb-2">
+                    <span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Recent Chats</span>
+                </div>
+                <!-- Active Chat Tile -->
+                <button class="w-full flex items-center gap-3 p-3 bg-primary-container text-on-primary-container rounded-lg font-bold transition-all duration-200 ease-in-out text-left">
+                    <span class="material-symbols-outlined">chat</span>
+                    <span class="truncate font-label-md text-label-md">Current Conversation</span>
+                </button>
+                <!-- Static helper references -->
+                <button onclick="sendPromptDirect('Help me optimize a database query')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all duration-200 ease-in-out text-left">
+                    <span class="material-symbols-outlined">history</span>
+                    <span class="truncate font-label-md text-label-md">Optimize queries</span>
+                </button>
+                <button onclick="sendPromptDirect('Explain the sliding window algorithm')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all duration-200 ease-in-out text-left">
+                    <span class="material-symbols-outlined">history</span>
+                    <span class="truncate font-label-md text-label-md">Sliding window details</span>
+                </button>
+            </nav>
+            
+            <!-- User Profile Card -->
+            <div class="mt-auto pt-4 border-t border-outline-variant/30">
+                <div onclick="window.location.href='/account'" class="flex items-center justify-between p-2 rounded-xl hover:bg-surface-variant/20 transition-colors group cursor-pointer">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 rounded-full overflow-hidden bg-surface-variant ring-2 ring-primary/20">
+                            <img class="w-full h-full object-cover" src="{{ session.get('avatar_url', 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf') }}"/>
+                        </div>
+                        <div class="flex flex-col">
+                            <span class="font-label-md text-label-md text-on-surface">{{ session.get('display_name', 'Alex Rivera') }}</span>
+                            <span class="text-[10px] text-outline">Pro Member</span>
+                        </div>
+                    </div>
+                    <span class="material-symbols-outlined text-outline group-hover:text-primary transition-colors">settings</span>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Chat Canvas -->
+        <main class="flex-1 flex flex-col md:ml-64 relative bg-surface-dim">
+            <!-- Dynamic notifications -->
+            <div id="theme-banner" class="absolute top-4 right-4 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-surface-container-high border border-outline-variant/30 text-on-surface px-4 py-2.5 rounded-full shadow-lg font-label-md text-label-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary text-sm">palette</span>
+                <span id="theme-banner-text">Theme preference updated</span>
+            </div>
+
+            <!-- Chat Stream -->
+            <div id="chat-stream" class="flex-1 overflow-y-auto px-4 md:px-margin-desktop py-8 space-y-8 max-w-container-max mx-auto w-full scroll-smooth">
+                <!-- Fallback welcome message if history is empty -->
+                {% if not history %}
+                    <div id="welcome-chat-block" class="flex flex-col gap-3 max-w-[85%] md:max-w-[70%]">
+                        <div class="flex items-center gap-2 mb-1">
+                            <div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+                                <span class="material-symbols-outlined text-[14px] text-on-primary-container" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                            </div>
+                            <span class="font-label-sm text-label-sm text-primary">Companion</span>
+                        </div>
+                        <div class="bg-surface-container p-6 rounded-3xl rounded-tl-none shadow-sm text-on-surface leading-relaxed font-body-md border border-outline-variant/10">
+                            Hello! I'm your friendly AI Companion. Let's explore new concepts or troubleshoot some backend code today. How can I help you?
+                        </div>
+                    </div>
+                {% endif %}
+
+                <!-- Existing messages -->
+                {% for msg in history %}
+                    {% if msg.role == 'model' %}
+                        <div class="flex flex-col gap-3 max-w-[85%] md:max-w-[70%]">
+                            <div class="flex items-center gap-2 mb-1">
+                                <div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+                                    <span class="material-symbols-outlined text-[14px] text-on-primary-container" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                                </div>
+                                <span class="font-label-sm text-label-sm text-primary">Companion</span>
+                            </div>
+                            <div class="bg-surface-container p-6 rounded-3xl rounded-tl-none shadow-sm text-on-surface leading-relaxed font-body-md border border-outline-variant/10 markdown-content">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="flex flex-col items-end gap-3 ml-auto max-w-[85%] md:max-w-[70%]">
+                            <div class="chat-bubble-user p-6 rounded-3xl rounded-tr-none text-on-primary font-body-md shadow-md">
+                                {{ msg.content }}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+
+            <!-- Typing Indicator -->
+            <div id="typing-indicator" class="px-4 md:px-margin-desktop py-2 max-w-container-max mx-auto w-full hidden">
+                <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px] text-on-primary-container animate-spin">progress_activity</span>
+                    </div>
+                    <span class="font-label-sm text-label-sm text-outline">Companion is typing...</span>
+                </div>
+            </div>
+
+            <!-- Input Dock -->
+            <div class="p-4 md:p-margin-desktop bg-gradient-to-t from-surface-dim via-surface-dim to-transparent">
+                <div class="max-w-container-max mx-auto w-full relative">
+                    <div class="glass-panel rounded-full border border-outline-variant/20 p-2 flex items-center gap-2 group transition-all focus-within:ring-2 focus-within:ring-primary/30">
+                        <button class="p-3 rounded-full text-on-surface-variant hover:text-primary hover:bg-primary/10 transition-colors">
+                            <span class="material-symbols-outlined">attach_file</span>
+                        </button>
+                        
+                        <!-- Form or input field -->
+                        <input id="prompt-input" class="flex-1 bg-transparent border-none focus:ring-0 text-on-surface font-body-md placeholder:text-outline/50 h-12" placeholder="Type a message here..." type="text" onkeydown="handleKey(event)"/>
+                        
+                        <button id="send-button" onclick="sendPrompt()" class="p-3 rounded-full text-outline/30 cursor-not-allowed transition-all" disabled>
+                            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">send</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Suggestion Chips -->
+                    <div class="flex gap-2 mt-4 overflow-x-auto pb-2 no-scrollbar">
+                        <button onclick="sendPromptDirect('Surprise me with a color palette')" class="whitespace-nowrap px-4 py-2 rounded-full bg-primary/10 border border-primary/20 text-primary font-label-md text-label-md hover:bg-primary/20 transition-colors">
+                            Surprise me with a palette
+                        </button>
+                        <button onclick="sendPromptDirect('Explain the science of bioluminescence')" class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-variant/30 border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md hover:bg-surface-variant/50 transition-colors">
+                            Explain the science
+                        </button>
+                        <button onclick="newChatSession()" class="whitespace-nowrap px-4 py-2 rounded-full bg-surface-variant/30 border border-outline-variant/30 text-on-surface-variant font-label-md text-label-md hover:bg-surface-variant/50 transition-colors">
+                            Clear chat history
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- Mobile Bottom Nav -->
+    <div class="md:hidden glass-panel fixed bottom-0 left-0 w-full h-16 flex justify-around items-center border-t border-outline-variant/10 z-30">
+        <button class="flex flex-col items-center gap-1 text-primary">
+            <span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">chat</span>
+            <span class="text-[10px]">Chat</span>
+        </button>
+        <button onclick="window.location.href='/account'" class="flex flex-col items-center gap-1 text-on-surface-variant">
+            <span class="material-symbols-outlined">settings</span>
+            <span class="text-[10px]">Settings</span>
+        </button>
+    </div>
+
+    <script>
+        const input = document.getElementById('prompt-input');
+        const sendBtn = document.getElementById('send-button');
+        const stream = document.getElementById('chat-stream');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        // Scroll chat stream to bottom
+        function scrollToBottom() {
+            stream.scrollTop = stream.scrollHeight;
+        }
+
+        // Auto scroll on load
+        window.addEventListener('load', () => {
+            scrollToBottom();
+            input.focus();
+        });
+
+        // Input field change listener to activate button
+        input.addEventListener('input', (e) => {
+            if (e.target.value.trim().length > 0) {
+                sendBtn.disabled = false;
+                sendBtn.classList.remove('text-outline/30', 'cursor-not-allowed');
+                sendBtn.classList.add('text-primary', 'cursor-pointer', 'hover:bg-primary/10');
+            } else {
+                sendBtn.disabled = true;
+                sendBtn.classList.add('text-outline/30', 'cursor-not-allowed');
+                sendBtn.classList.remove('text-primary', 'cursor-pointer', 'hover:bg-primary/10');
+            }
+        });
+
+        function handleKey(e) {
+            if (e.key === 'Enter' && !sendBtn.disabled) {
+                sendPrompt();
+            }
+        }
+
+        function appendUserMessage(text) {
+            const block = document.createElement('div');
+            block.className = "flex flex-col items-end gap-3 ml-auto max-w-[85%] md:max-w-[70%]";
+            block.innerHTML = `
+                <div class="chat-bubble-user p-6 rounded-3xl rounded-tr-none text-on-primary font-body-md shadow-md">
+                    ${escapeHtml(text)}
+                </div>
+            `;
+            stream.appendChild(block);
+            scrollToBottom();
+        }
+
+        function appendModelMessage(text) {
+            const block = document.createElement('div');
+            block.className = "flex flex-col gap-3 max-w-[85%] md:max-w-[70%]";
+            block.innerHTML = `
+                <div class="flex items-center gap-2 mb-1">
+                    <div class="w-6 h-6 rounded-full bg-primary-container flex items-center justify-center">
+                        <span class="material-symbols-outlined text-[14px] text-on-primary-container" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+                    </div>
+                    <span class="font-label-sm text-label-sm text-primary">Companion</span>
+                </div>
+                <div class="bg-surface-container p-6 rounded-3xl rounded-tl-none shadow-sm text-on-surface leading-relaxed font-body-md border border-outline-variant/10 markdown-content">
+                    ${text}
+                </div>
+            `;
+            stream.appendChild(block);
+            scrollToBottom();
+        }
+
+        function escapeHtml(text) {
+            return text
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        async function sendPrompt() {
+            const text = input.value.trim();
+            if (!text) return; // Structural Validation Gate check
+
+            // Clear input & disable button
+            input.value = '';
+            sendBtn.disabled = true;
+            sendBtn.classList.add('text-outline/30', 'cursor-not-allowed');
+            sendBtn.classList.remove('text-primary', 'cursor-pointer', 'hover:bg-primary/10');
+
+            // Hide fallback welcome message if present
+            const fallback = document.getElementById('welcome-chat-block');
+            if (fallback) fallback.classList.add('hidden');
+
+            appendUserMessage(text);
+            
+            // Show typing indicator
+            typingIndicator.classList.remove('hidden');
+            scrollToBottom();
+
+            try {
+                const response = await fetch('/api/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ message: text })
+                });
+
+                typingIndicator.classList.add('hidden');
+
+                if (response.ok) {
+                    const data = await response.json();
+                    appendModelMessage(data.reply);
+                } else {
+                    const errData = await response.json();
+                    appendModelMessage(`Error: ${errData.error || 'Something went wrong.'}`);
+                }
+            } catch (err) {
+                typingIndicator.classList.add('hidden');
+                console.error(err);
+                appendModelMessage("Error: Failed to connect to servers.");
+            }
+        }
+
+        function sendPromptDirect(text) {
+            input.value = text;
+            input.dispatchEvent(new Event('input'));
+            sendPrompt();
+        }
+
+        async function newChatSession() {
+            if (confirm("Are you sure you want to clear the current chat history?")) {
+                try {
+                    const response = await fetch('/api/clear_chat', { method: 'POST' });
+                    if (response.ok) {
+                        window.location.reload();
+                    }
+                } catch (err) {
+                    console.error(err);
+                }
+            }
+        }
+
+        // Cycle through light -> dark -> system
+        function cycleTheme() {
+            const current = localStorage.getItem('theme_preference') || 'system';
+            let next = 'dark';
+            if (current === 'dark') next = 'light';
+            else if (current === 'light') next = 'system';
+            
+            updateThemePreference(next);
+            showThemeNotification(next);
+        }
+
+        function showThemeNotification(theme) {
+            const banner = document.getElementById('theme-banner');
+            const text = document.getElementById('theme-banner-text');
+            
+            let label = "System Default Theme";
+            if (theme === 'dark') label = "Dark Theme Active";
+            if (theme === 'light') label = "Light Theme Active";
+            
+            text.textContent = label;
+            banner.classList.remove('translate-y-[-100px]', 'opacity-0');
+            banner.classList.add('translate-y-0', 'opacity-100');
+            
+            setTimeout(() => {
+                banner.classList.remove('translate-y-0', 'opacity-100');
+                banner.classList.add('translate-y-[-100px]', 'opacity-0');
+            }, 2500);
+        }
+    </script>
+</body>
+</html>

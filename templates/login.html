@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+    <title>Welcome Gateway - My AI Companion</title>
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    
+    <!-- Local styles & scripts -->
+    <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
+    <script>
+        window.userThemePreference = "{{ theme_preference }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+</head>
+<body class="min-h-screen flex items-center justify-center p-6 relative selection:bg-primary-container selection:text-on-primary-container">
+    <!-- Atmospheric Background Decoration -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+        <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]"></div>
+        <div class="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-secondary/10 blur-[120px]"></div>
+    </div>
+    
+    <!-- Custom Cursor Glow -->
+    <div id="cursor-glow"></div>
+
+    <!-- Main Content Container -->
+    <main class="w-full max-w-[480px] z-10">
+        <!-- Brand Header -->
+        <div class="flex flex-col items-center mb-10 text-center">
+            <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
+                <span class="material-symbols-outlined text-on-primary-container !text-4xl" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
+            </div>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface mb-2 tracking-tight">Hey there! Great to see you.</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant">Let's get you signed in.</p>
+        </div>
+        
+        <!-- Flash messages -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="mb-6 space-y-2">
+                    {% for category, msg in messages %}
+                        <div class="p-4 rounded-xl {% if category == 'error' %}bg-error-container text-on-error-container border border-error/20{% else %}bg-primary-container text-on-primary-container border border-primary/20{% endif %} font-label-md text-label-md">
+                            {{ msg }}
+                        </div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        <!-- Auth Card -->
+        <div class="glass-card rounded-lg p-10">
+            <!-- Social Login Cluster -->
+            <div class="flex flex-col gap-3 mb-8">
+                <button class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
+                    <img class="w-5 h-5" alt="Google" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgVA9kNdkDIdD-ndOVx3MuUnlntykxjKwz0akHHZWDbNpXAFjQ9WVv0g2-dWJynga8lfBoYlbZSrpWpfD1ssEumpUlcdl_1rYY4iWaTKqKb8PByGmHtQQYn-nFCQpLL9wlG7Q6cd1fEeKjew9_caYQjmNqRWxp3-DMYRWb9CLfFaY2Lh8o0Dgpi2ZikgIk2Q6bUxvWHrBPHDoNEPm374ZaMn1CWYezD2ckeVmugCQH3vhIDU1I19eB0EPWECmamsQGdNTkyGaKDn1Q"/>
+                    <span class="font-label-md text-label-md text-on-surface">Continue with Google</span>
+                </button>
+                <button class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
+                    <img class="w-5 h-5" alt="GitHub" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLIuIiagKsMT1jAqVP2nYmpREhBM-Ixk9p_EOVVN24LEn0PlP1b0t1W7wnrRp9TusGIuQ73CS5ckoQn1ztXwIyKHo82iZIYAwxJbTqCrcXn3EHl-1WOWdGJdvJCbq-o47jXlpL5lLXz6dwdKs3xYwTVII15-Io4Za8hGyk_0kpCejiVS8VjhUiH55Zw4iDzRJt2flEy1U_A44IukDBjh2JltSRVBy8f08QdXxOe-VpUUxOfbnc2PXU_i2aiTajLpY-qolcp8iugSL8"/>
+                    <span class="font-label-md text-label-md text-on-surface">Continue with GitHub</span>
+                </button>
+            </div>
+            
+            <!-- Divider -->
+            <div class="flex items-center gap-4 mb-8">
+                <div class="h-[1px] flex-1 bg-outline-variant/30"></div>
+                <span class="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-widest">or use email</span>
+                <div class="h-[1px] flex-1 bg-outline-variant/30"></div>
+            </div>
+            
+            <!-- Credentials Form -->
+            <form class="flex flex-col gap-5" action="/auth/login" method="POST">
+                <div class="space-y-1.5">
+                    <label class="font-label-sm text-label-sm text-on-surface-variant ml-4" for="email">Email Address</label>
+                    <div class="input-glow bg-surface-container-low rounded-full h-14 flex items-center px-6 border border-outline-variant/20 focus-within:border-primary/50 transition-all">
+                        <span class="material-symbols-outlined text-on-surface-variant mr-3">mail</span>
+                        <input class="bg-transparent border-none focus:ring-0 w-full text-on-surface placeholder:text-outline/50 font-body-md" id="email" name="email" placeholder="name@company.com" type="email" required/>
+                    </div>
+                </div>
+                <div class="space-y-1.5">
+                    <div class="flex justify-between items-center px-4">
+                        <label class="font-label-sm text-label-sm text-on-surface-variant" for="password">Password</label>
+                        <a class="font-label-sm text-label-sm text-primary hover:underline transition-all" href="#">Forgot?</a>
+                    </div>
+                    <div class="input-glow bg-surface-container-low rounded-full h-14 flex items-center px-6 border border-outline-variant/20 focus-within:border-primary/50 transition-all">
+                        <span class="material-symbols-outlined text-on-surface-variant mr-3">lock</span>
+                        <input class="bg-transparent border-none focus:ring-0 w-full text-on-surface placeholder:text-outline/50 font-body-md" id="password" name="password" placeholder="••••••••" type="password" required/>
+                        <button class="text-on-surface-variant hover:text-on-surface transition-colors" type="button" onclick="togglePasswordVisibility()">
+                            <span class="material-symbols-outlined" id="visibility-icon">visibility</span>
+                        </button>
+                    </div>
+                </div>
+                <button class="w-full h-14 rounded-full bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container font-headline-md text-headline-md font-bold mt-4 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-150 btn-glow" type="submit">
+                    Let's Go!
+                </button>
+            </form>
+        </div>
+        <!-- Footer -->
+        <div class="mt-10 text-center">
+            <p class="font-body-md text-body-md text-on-surface-variant">
+                Don't have an account? 
+                <a class="text-primary font-bold hover:underline ml-1" href="#">Join the community</a>
+            </p>
+        </div>
+    </main>
+
+    <script>
+        // Password visibility toggle
+        function togglePasswordVisibility() {
+            const pwdInput = document.getElementById('password');
+            const icon = document.getElementById('visibility-icon');
+            if (pwdInput.type === 'password') {
+                pwdInput.type = 'text';
+                icon.textContent = 'visibility_off';
+            } else {
+                pwdInput.type = 'password';
+                icon.textContent = 'visibility';
+            }
+        }
+
+        // Parallax mouse effect for decoration blobs
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            
+            const blobs = document.querySelectorAll('.bg-primary\\/10, .bg-secondary\\/10');
+            if (blobs.length >= 2) {
+                blobs[0].style.transform = `translate(${x * 30}px, ${y * 30}px)`;
+                blobs[1].style.transform = `translate(${x * -30}px, ${y * -30}px)`;
+            }
+
+            const glow = document.getElementById('cursor-glow');
+            if (glow) {
+                glow.style.left = e.clientX + 'px';
+                glow.style.top = e.clientY + 'px';
+            }
+        });
+    </script>
+</body>
+</html>
