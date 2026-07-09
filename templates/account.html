@@ -95,7 +95,7 @@
                 <form action="/account/update" method="POST" class="p-6 md:p-8 flex flex-col items-center gap-6">
                     <div class="relative group">
                         <div class="w-24 h-24 rounded-full p-1 bg-gradient-to-tr from-primary to-secondary">
-                            <img id="avatar-preview" class="w-full h-full object-cover rounded-full border-4 border-surface-container-high" src="{{ user.avatar_url or 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf' }}"/>
+                            <img id="avatar-preview" class="w-full h-full object-cover rounded-full border-4 border-surface-container-high" src="{{ user.avatar_url or 'https://api.dicebear.com/7.x/bottts/svg?seed=' ~ user.email }}"/>
                         </div>
                     </div>
 
@@ -172,7 +172,7 @@
             if (url) {
                 preview.src = url;
             } else {
-                preview.src = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf';
+                preview.src = 'https://api.dicebear.com/7.x/bottts/svg?seed=' + encodeURIComponent('{{ user.email }}');
             }
         }
 

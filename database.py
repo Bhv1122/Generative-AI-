@@ -250,13 +250,13 @@ def get_chat_history(session_id, limit=20):
             cur.execute("""
                 SELECT role, message_content
                 FROM (
-                    SELECT role, message_content, created_at
+                    SELECT role, message_content, created_at, rowid
                     FROM chat_history
                     WHERE session_id = ?
-                    ORDER BY created_at DESC
+                    ORDER BY created_at DESC, rowid DESC
                     LIMIT ?
                 ) sub
-                ORDER BY created_at ASC;
+                ORDER BY created_at ASC, rowid ASC;
             """, (session_id, limit))
             rows = cur.fetchall()
             chat_list = []
@@ -298,5 +298,64 @@ def clear_chat_history(session_id):
                 conn.commit()
     except Exception as e:
         print(f"Error clearing chat history: {e}")
+    finally:
+        db.put_conn(conn)
+
+def get_user_session_list(user_email):
+    import json
+    conn = db.get_conn()
+    try:
+        if db.use_sqlite:
+            cur = conn.cursor()
+            cur.execute("""
+                SELECT session_id, message_content, MIN(created_at) as created_at
+                FROM chat_history
+                WHERE user_email = ?
+                GROUP BY session_id
+                ORDER BY created_at DESC;
+            """, (user_email,))
+            rows = cur.fetchall()
+            session_list = []
+            for r in rows:
+                try:
+                    content = json.loads(r[1])
+                    title = content.get("text", "New Conversation")
+                except Exception:
+                    title = "New Conversation"
+                if len(title) > 30:
+                    title = title[:27] + "..."
+                session_list.append({
+                    "session_id": r[0],
+                    "title": title,
+                    "created_at": r[2]
+                })
+            return session_list
+        else:
+            with conn.cursor(cursor_factory=RealDictCursor) as cur:
+                cur.execute("""
+                    SELECT session_id, message_content, created_at
+                    FROM (
+                        SELECT DISTINCT ON (session_id) session_id, message_content, created_at 
+                        FROM chat_history 
+                        WHERE user_email = %s 
+                        ORDER BY session_id, created_at ASC
+                    ) sub
+                    ORDER BY created_at DESC;
+                """, (user_email,))
+                rows = cur.fetchall()
+                session_list = []
+                for r in rows:
+                    title = r['message_content'].get("text", "New Conversation")
+                    if len(title) > 30:
+                        title = title[:27] + "..."
+                    session_list.append({
+                        "session_id": str(r['session_id']),
+                        "title": title,
+                        "created_at": r['created_at']
+                    })
+                return session_list
+    except Exception as e:
+        print(f"Error getting user session list: {e}")
+        return []
     finally:
         db.put_conn(conn)

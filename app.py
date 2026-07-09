@@ -41,7 +41,7 @@ github = oauth.register(
 )
 
 # Import database module
-from database import init_db, get_user, upsert_user, update_user_theme, save_chat_message, get_chat_history, clear_chat_history
+from database import init_db, get_user, upsert_user, update_user_theme, save_chat_message, get_chat_history, clear_chat_history, get_user_session_list
 
 # Initialize Database Schema
 try:
@@ -135,8 +135,9 @@ def register():
     # Hash password
     pw_hash = generate_password_hash(password)
     
-    # Default avatar url
-    avatar_url = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf'
+    # Default random avatar url using Dicebear robots
+    import urllib.parse
+    avatar_url = f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(email)}"
     
     # Save user row
     # pyrefly: ignore [unexpected-keyword]
@@ -158,21 +159,11 @@ def register():
 # OAuth Routing Sequences
 @app.route('/login/google')
 def login_google():
-    client_id = os.getenv('GOOGLE_CLIENT_ID', 'placeholder_google_id')
-    if not client_id or 'placeholder' in client_id or 'your_google' in client_id:
-        # Mock Google callback logic
-        email = "mock.google.user@companion.ai"
-        name = "Mock Google User"
-        picture = "https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf"
-        user = upsert_user(email, name, picture, 'system')
-        session['user_email'] = user['email']
-        session['display_name'] = user['display_name']
-        session['avatar_url'] = user['avatar_url']
-        if 'session_id' not in session:
-            session['session_id'] = str(uuid.uuid4())
-        flash("Local Mock Google sign-in successful (No credentials configured in .env).", "info")
-        return redirect(url_for('chat'))
-
+    client_id = os.getenv('GOOGLE_CLIENT_ID')
+    if not client_id or 'placeholder' in client_id or client_id == 'your_google_client_id_here':
+        flash('Google OAuth credentials are not configured. Please add GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET to your .env file.', 'error')
+        return redirect(url_for('login'))
+        
     redirect_uri = url_for('google_callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
@@ -182,7 +173,11 @@ def google_callback():
     user_info = oauth.google.get('userinfo').json()
     email = user_info.get('email')
     name = user_info.get('name') or email.split('@')[0].capitalize()
+    
     picture = user_info.get('picture')
+    if not picture:
+        import urllib.parse
+        picture = f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(email)}"
     
     user = upsert_user(email, name, picture, 'system')
     
@@ -197,21 +192,11 @@ def google_callback():
 
 @app.route('/login/github')
 def login_github():
-    client_id = os.getenv('GITHUB_CLIENT_ID', 'placeholder_github_id')
-    if not client_id or 'placeholder' in client_id or 'your_github' in client_id:
-        # Mock GitHub callback logic
-        email = "mock.github.user@companion.ai"
-        name = "Mock GitHub User"
-        picture = "https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf"
-        user = upsert_user(email, name, picture, 'system')
-        session['user_email'] = user['email']
-        session['display_name'] = user['display_name']
-        session['avatar_url'] = user['avatar_url']
-        if 'session_id' not in session:
-            session['session_id'] = str(uuid.uuid4())
-        flash("Local Mock GitHub sign-in successful (No credentials configured in .env).", "info")
-        return redirect(url_for('chat'))
-
+    client_id = os.getenv('GITHUB_CLIENT_ID')
+    if not client_id or 'placeholder' in client_id or client_id == 'your_github_client_id_here':
+        flash('GitHub OAuth credentials are not configured. Please add GITHUB_CLIENT_ID and GITHUB_CLIENT_SECRET to your .env file.', 'error')
+        return redirect(url_for('login'))
+        
     redirect_uri = url_for('github_callback', _external=True)
     return oauth.github.authorize_redirect(redirect_uri)
 
@@ -236,7 +221,11 @@ def github_callback():
         email = f"{user_info.get('login')}@github.placeholder"
         
     name = user_info.get('name') or user_info.get('login')
+    
     picture = user_info.get('avatar_url')
+    if not picture:
+        import urllib.parse
+        picture = f"https://api.dicebear.com/7.x/bottts/svg?seed={urllib.parse.quote(email)}"
     
     user = upsert_user(email, name, picture, 'system')
     
@@ -260,7 +249,32 @@ def chat():
     user = get_user(session['user_email'])
     theme = user['theme_preference'] if user else 'system'
     history = get_chat_history(session['session_id'], limit=20)
-    return render_template('chat.html', history=history, theme_preference=theme)
+    session_list = get_user_session_list(session['user_email'])
+    return render_template('chat.html', history=history, theme_preference=theme, session_list=session_list)
+
+@app.route('/chat/new')
+@login_required
+def chat_new():
+    session['session_id'] = str(uuid.uuid4())
+    return redirect(url_for('chat'))
+
+@app.route('/api/history', methods=['GET'])
+@login_required
+def api_history():
+    session_list = get_user_session_list(session['user_email'])
+    return jsonify({"history": session_list})
+
+@app.route('/api/history/load', methods=['POST'])
+@login_required
+def api_history_load():
+    data = request.get_json() or {}
+    session_id = data.get('session_id')
+    if not session_id:
+        return jsonify({"error": "session_id is required."}), 400
+        
+    history = get_chat_history(session_id, limit=20)
+    session['session_id'] = session_id
+    return jsonify({"history": history, "session_id": session_id})
 
 @app.route('/account')
 @login_required
