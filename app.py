@@ -139,6 +139,7 @@ def register():
     avatar_url = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf'
     
     # Save user row
+    # pyrefly: ignore [unexpected-keyword]
     user = upsert_user(email, display_name, avatar_url, 'system', password_hash=pw_hash)
     if not user:
         flash('Registration failed. Please try again.', 'error')
@@ -157,6 +158,21 @@ def register():
 # OAuth Routing Sequences
 @app.route('/login/google')
 def login_google():
+    client_id = os.getenv('GOOGLE_CLIENT_ID', 'placeholder_google_id')
+    if not client_id or 'placeholder' in client_id or 'your_google' in client_id:
+        # Mock Google callback logic
+        email = "mock.google.user@companion.ai"
+        name = "Mock Google User"
+        picture = "https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf"
+        user = upsert_user(email, name, picture, 'system')
+        session['user_email'] = user['email']
+        session['display_name'] = user['display_name']
+        session['avatar_url'] = user['avatar_url']
+        if 'session_id' not in session:
+            session['session_id'] = str(uuid.uuid4())
+        flash("Local Mock Google sign-in successful (No credentials configured in .env).", "info")
+        return redirect(url_for('chat'))
+
     redirect_uri = url_for('google_callback', _external=True)
     return oauth.google.authorize_redirect(redirect_uri)
 
@@ -181,6 +197,21 @@ def google_callback():
 
 @app.route('/login/github')
 def login_github():
+    client_id = os.getenv('GITHUB_CLIENT_ID', 'placeholder_github_id')
+    if not client_id or 'placeholder' in client_id or 'your_github' in client_id:
+        # Mock GitHub callback logic
+        email = "mock.github.user@companion.ai"
+        name = "Mock GitHub User"
+        picture = "https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf"
+        user = upsert_user(email, name, picture, 'system')
+        session['user_email'] = user['email']
+        session['display_name'] = user['display_name']
+        session['avatar_url'] = user['avatar_url']
+        if 'session_id' not in session:
+            session['session_id'] = str(uuid.uuid4())
+        flash("Local Mock GitHub sign-in successful (No credentials configured in .env).", "info")
+        return redirect(url_for('chat'))
+
     redirect_uri = url_for('github_callback', _external=True)
     return oauth.github.authorize_redirect(redirect_uri)
 
