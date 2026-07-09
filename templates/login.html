@@ -8,17 +8,32 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
     <!-- Local styles & scripts -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
     <script>
         window.userThemePreference = "{{ theme_preference }}";
+        // Immediate FOUC-preventing theme initialization
+        (function() {
+            const themePref = window.userThemePreference || localStorage.getItem('theme_preference') || 'system';
+            const htmlEl = document.documentElement;
+            if (themePref === 'dark') {
+                htmlEl.classList.remove('light');
+                htmlEl.classList.add('dark');
+            } else if (themePref === 'light') {
+                htmlEl.classList.remove('dark');
+                htmlEl.classList.add('light');
+            } else {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                htmlEl.classList.add(isDark ? 'dark' : 'light');
+            }
+        })();
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
-<body class="min-h-screen flex items-center justify-center p-6 relative selection:bg-primary-container selection:text-on-primary-container">
+<body class="min-h-screen flex items-center justify-center p-6 relative bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container">
     <!-- Atmospheric Background Decoration -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
         <div class="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-primary/10 blur-[120px]"></div>
@@ -95,7 +110,7 @@
                         </button>
                     </div>
                 </div>
-                <button class="w-full h-14 rounded-full bg-gradient-to-r from-primary-container to-secondary-container text-on-primary-container font-headline-md text-headline-md font-bold mt-4 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-150 btn-glow" type="submit">
+                <button class="w-full h-14 rounded-full bg-gradient-to-r from-primary-container to-secondary-container text-[#001e2c] font-headline-md text-headline-md font-bold mt-4 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-150 btn-glow" type="submit">
                     Let's Go!
                 </button>
             </form>

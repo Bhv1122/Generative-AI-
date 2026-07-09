@@ -141,6 +141,7 @@ body {
 /* Chat page additions */
 .chat-bubble-user {
     background: linear-gradient(135deg, #2dd4bf 0%, #38bdf8 100%);
+    color: #001e2c !important; /* High contrast dark green/black text to match layout */
     box-shadow: inset 0 1px 1px rgba(255,255,255,0.2);
 }
 

@@ -8,15 +8,30 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
     
+    <!-- Tailwind CDN -->
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+
     <!-- Local styles & scripts -->
     <link href="{{ url_for('static', filename='css/style.css') }}" rel="stylesheet"/>
     <script>
         window.userThemePreference = "{{ theme_preference }}";
+        // Immediate FOUC-preventing theme initialization
+        (function() {
+            const themePref = window.userThemePreference || localStorage.getItem('theme_preference') || 'system';
+            const htmlEl = document.documentElement;
+            if (themePref === 'dark') {
+                htmlEl.classList.remove('light');
+                htmlEl.classList.add('dark');
+            } else if (themePref === 'light') {
+                htmlEl.classList.remove('dark');
+                htmlEl.classList.add('light');
+            } else {
+                const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+                htmlEl.classList.add(isDark ? 'dark' : 'light');
+            }
+        })();
     </script>
     <script src="{{ url_for('static', filename='js/main.js') }}"></script>
-    
-    <!-- Tailwind CDN -->
-    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
 </head>
 <body class="bg-background text-on-surface font-body-md selection:bg-primary-container selection:text-on-primary-container overflow-hidden h-screen flex flex-col">
     
@@ -47,7 +62,7 @@
         <!-- SideNavBar (Hidden on Mobile) -->
         <aside class="flex-shrink-0 w-64 flex flex-col p-6 z-30 bg-surface-container border-r border-outline-variant/30 rounded-r-xl hidden md:flex h-full">
             <div class="mb-8">
-                <button onclick="newChatSession()" class="w-full py-4 px-6 rounded-lg bg-primary text-on-primary font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-in-out hover:shadow-lg hover:shadow-primary/20 active:scale-95">
+                <button onclick="newChatSession()" class="w-full py-4 px-6 rounded-full bg-primary text-[#001e2c] font-bold flex items-center justify-center gap-2 transition-all duration-200 ease-in-out hover:shadow-lg hover:shadow-primary/20 active:scale-95">
                     <span class="material-symbols-outlined">add</span>
                     <span>New Chat</span>
                 </button>
@@ -57,16 +72,16 @@
                     <span class="font-label-sm text-label-sm text-outline uppercase tracking-widest">Recent Chats</span>
                 </div>
                 <!-- Active Chat Tile -->
-                <button class="w-full flex items-center gap-3 p-3 bg-primary-container text-on-primary-container rounded-lg font-bold transition-all duration-200 ease-in-out text-left">
+                <button class="w-full flex items-center gap-3 p-3 bg-primary text-[#001e2c] rounded-full font-bold transition-all duration-200 ease-in-out text-left">
                     <span class="material-symbols-outlined">chat</span>
                     <span class="truncate font-label-md text-label-md">Current Conversation</span>
                 </button>
                 <!-- Static helper references -->
-                <button onclick="sendPromptDirect('Help me optimize a database query')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all duration-200 ease-in-out text-left">
+                <button onclick="sendPromptDirect('Help me optimize a database query')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/30 rounded-full transition-all duration-200 ease-in-out text-left">
                     <span class="material-symbols-outlined">history</span>
                     <span class="truncate font-label-md text-label-md">Optimize queries</span>
                 </button>
-                <button onclick="sendPromptDirect('Explain the sliding window algorithm')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/50 rounded-lg transition-all duration-200 ease-in-out text-left">
+                <button onclick="sendPromptDirect('Explain the sliding window algorithm')" class="w-full flex items-center gap-3 p-3 text-on-surface-variant hover:bg-surface-variant/30 rounded-full transition-all duration-200 ease-in-out text-left">
                     <span class="material-symbols-outlined">history</span>
                     <span class="truncate font-label-md text-label-md">Sliding window details</span>
                 </button>
@@ -90,7 +105,7 @@
         </aside>
 
         <!-- Main Chat Canvas -->
-        <main class="flex-1 flex flex-col relative bg-surface-dim h-full overflow-hidden">
+        <main class="flex-1 flex flex-col relative bg-surface-container-lowest h-full overflow-hidden">
             <!-- Dynamic notifications -->
             <div id="theme-banner" class="absolute top-4 right-4 z-50 transform translate-y-[-100px] opacity-0 transition-all duration-300 bg-surface-container-high border border-outline-variant/30 text-on-surface px-4 py-2.5 rounded-full shadow-lg font-label-md text-label-md flex items-center gap-2">
                 <span class="material-symbols-outlined text-primary text-sm">palette</span>
