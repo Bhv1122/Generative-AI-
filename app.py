@@ -19,13 +19,8 @@ google = oauth.register(
     name='google',
     client_id=os.getenv('GOOGLE_CLIENT_ID', 'placeholder_google_id'),
     client_secret=os.getenv('GOOGLE_CLIENT_SECRET', 'placeholder_google_secret'),
-    access_token_url='https://accounts.google.com/o/oauth2/token',
-    access_token_params=None,
-    authorize_url='https://accounts.google.com/o/oauth2/auth',
-    authorize_params=None,
-    api_base_url='https://www.googleapis.com/oauth2/v1/',
-    client_kwargs={'scope': 'openid email profile'},
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_kwargs={'scope': 'openid email profile'}
 )
 
 github = oauth.register(
@@ -170,7 +165,9 @@ def login_google():
 @app.route('/login/google/callback')
 def google_callback():
     token = oauth.google.authorize_access_token()
-    user_info = oauth.google.get('userinfo').json()
+    user_info = token.get('userinfo')
+    if not user_info:
+        user_info = oauth.google.parse_id_token(token)
     email = user_info.get('email')
     name = user_info.get('name') or email.split('@')[0].capitalize()
     
