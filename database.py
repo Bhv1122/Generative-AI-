@@ -77,6 +77,9 @@ def init_db():
                 );
             """)
             cur.execute("""
+                ALTER TABLE companion_users ADD COLUMN IF NOT EXISTS password_hash VARCHAR(255);
+            """)
+            cur.execute("""
                 CREATE TABLE IF NOT EXISTS chat_history (
                     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
                     session_id UUID NOT NULL,
@@ -107,6 +110,11 @@ def init_db():
                 theme_preference TEXT DEFAULT 'system'
             );
         """)
+        try:
+            cur.execute("ALTER TABLE companion_users ADD COLUMN password_hash TEXT;")
+            conn.commit()
+        except Exception:
+            pass
         cur.execute("""
             CREATE TABLE IF NOT EXISTS chat_history (
                 id TEXT PRIMARY KEY,
@@ -145,20 +153,21 @@ def get_user(email):
     finally:
         db.put_conn(conn)
 
-def upsert_user(email, display_name, avatar_url, theme_preference='system'):
+def upsert_user(email, display_name, avatar_url, theme_preference='system', password_hash=None):
     conn = db.get_conn()
     try:
         if db.use_sqlite:
             cur = conn.cursor()
             cur.execute("""
-                INSERT INTO companion_users (email, display_name, avatar_url, theme_preference)
-                VALUES (?, ?, ?, ?)
+                INSERT INTO companion_users (email, display_name, avatar_url, theme_preference, password_hash)
+                VALUES (?, ?, ?, ?, ?)
                 ON CONFLICT (email) 
                 DO UPDATE SET 
                     display_name = EXCLUDED.display_name,
                     avatar_url = COALESCE(EXCLUDED.avatar_url, companion_users.avatar_url),
-                    theme_preference = COALESCE(EXCLUDED.theme_preference, companion_users.theme_preference);
-            """, (email, display_name, avatar_url, theme_preference))
+                    theme_preference = COALESCE(EXCLUDED.theme_preference, companion_users.theme_preference),
+                    password_hash = COALESCE(EXCLUDED.password_hash, companion_users.password_hash);
+            """, (email, display_name, avatar_url, theme_preference, password_hash))
             conn.commit()
             
             cur.execute("SELECT * FROM companion_users WHERE email = ?", (email,))
@@ -166,15 +175,16 @@ def upsert_user(email, display_name, avatar_url, theme_preference='system'):
         else:
             with conn.cursor(cursor_factory=RealDictCursor) as cur:
                 cur.execute("""
-                    INSERT INTO companion_users (email, display_name, avatar_url, theme_preference)
-                    VALUES (%s, %s, %s, %s)
+                    INSERT INTO companion_users (email, display_name, avatar_url, theme_preference, password_hash)
+                    VALUES (%s, %s, %s, %s, %s)
                     ON CONFLICT (email) 
                     DO UPDATE SET 
                         display_name = EXCLUDED.display_name,
                         avatar_url = COALESCE(EXCLUDED.avatar_url, companion_users.avatar_url),
-                        theme_preference = COALESCE(EXCLUDED.theme_preference, companion_users.theme_preference)
+                        theme_preference = COALESCE(EXCLUDED.theme_preference, companion_users.theme_preference),
+                        password_hash = COALESCE(EXCLUDED.password_hash, companion_users.password_hash)
                     RETURNING *;
-                """, (email, display_name, avatar_url, theme_preference))
+                """, (email, display_name, avatar_url, theme_preference, password_hash))
                 conn.commit()
                 return cur.fetchone()
     except Exception as e:

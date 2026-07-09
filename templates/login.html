@@ -50,8 +50,8 @@
             <div class="w-16 h-16 bg-primary-container rounded-2xl flex items-center justify-center mb-6 shadow-lg shadow-primary/20">
                 <span class="material-symbols-outlined text-on-primary-container !text-4xl" style="font-variation-settings: 'FILL' 1;">smart_toy</span>
             </div>
-            <h1 class="font-headline-lg text-headline-lg text-on-surface mb-2 tracking-tight">Hey there! Great to see you.</h1>
-            <p class="font-body-md text-body-md text-on-surface-variant">Let's get you signed in.</p>
+            <h1 class="font-headline-lg text-headline-lg text-on-surface mb-2 tracking-tight" id="gateway-title">Hey there! Great to see you.</h1>
+            <p class="font-body-md text-body-md text-on-surface-variant" id="gateway-subtitle">Let's get you signed in.</p>
         </div>
         
         <!-- Flash messages -->
@@ -69,14 +69,33 @@
 
         <!-- Auth Card -->
         <div class="glass-card rounded-lg p-10">
+            <!-- Segmented Control Tab Buttons -->
+            <div class="bg-surface-container-low dark:bg-surface-container-low p-1 rounded-full flex items-center relative h-12 mb-6 border border-outline-variant/10">
+                <button type="button" id="tab-login" onclick="toggleAuthTab('login')" class="flex-1 z-10 font-label-md text-label-md text-on-primary-container font-bold text-center py-2 rounded-full transition-all duration-200">
+                    Sign In
+                </button>
+                <button type="button" id="tab-register" onclick="toggleAuthTab('register')" class="flex-1 z-10 font-label-md text-label-md text-on-surface-variant text-center py-2 rounded-full transition-all duration-200">
+                    Create New Account
+                </button>
+                <!-- Sliding Indicator Pill -->
+                <div id="auth-tab-pill" class="absolute h-[calc(100%-8px)] w-[calc(50%-4px)] bg-primary-container rounded-full transition-all duration-300 left-[4px]"></div>
+            </div>
+
             <!-- Social Login Cluster -->
             <div class="flex flex-col gap-3 mb-8">
-                <button class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
-                    <img class="w-5 h-5" alt="Google" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDgVA9kNdkDIdD-ndOVx3MuUnlntykxjKwz0akHHZWDbNpXAFjQ9WVv0g2-dWJynga8lfBoYlbZSrpWpfD1ssEumpUlcdl_1rYY4iWaTKqKb8PByGmHtQQYn-nFCQpLL9wlG7Q6cd1fEeKjew9_caYQjmNqRWxp3-DMYRWb9CLfFaY2Lh8o0Dgpi2ZikgIk2Q6bUxvWHrBPHDoNEPm374ZaMn1CWYezD2ckeVmugCQH3vhIDU1I19eB0EPWECmamsQGdNTkyGaKDn1Q"/>
+                <button onclick="window.location.href='/login/google'" class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
+                    <svg class="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                        <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C4 20.53 7.7 23 12 23z" fill="#34A853"/>
+                        <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l2.85-2.22.81-.63z" fill="#FBBC05"/>
+                        <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 4 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z" fill="#EA4335"/>
+                    </svg>
                     <span class="font-label-md text-label-md text-on-surface">Continue with Google</span>
                 </button>
-                <button class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
-                    <img class="w-5 h-5" alt="GitHub" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBLIuIiagKsMT1jAqVP2nYmpREhBM-Ixk9p_EOVVN24LEn0PlP1b0t1W7wnrRp9TusGIuQ73CS5ckoQn1ztXwIyKHo82iZIYAwxJbTqCrcXn3EHl-1WOWdGJdvJCbq-o47jXlpL5lLXz6dwdKs3xYwTVII15-Io4Za8hGyk_0kpCejiVS8VjhUiH55Zw4iDzRJt2flEy1U_A44IukDBjh2JltSRVBy8f08QdXxOe-VpUUxOfbnc2PXU_i2aiTajLpY-qolcp8iugSL8"/>
+                <button onclick="window.location.href='/login/github'" class="flex items-center justify-center gap-3 w-full h-14 rounded-full bg-surface-container-high hover:bg-surface-container-highest transition-all duration-200 group border border-outline-variant/10">
+                    <svg class="w-5 h-5 fill-on-surface" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 .297c-6.63 0-12 5.373-12 12 0 5.303 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61C4.422 18.07 3.633 17.7 3.633 17.7c-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.606-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 22.092 24 17.592 24 12.297c0-6.627-5.373-12-12-12"/>
+                    </svg>
                     <span class="font-label-md text-label-md text-on-surface">Continue with GitHub</span>
                 </button>
             </div>
@@ -89,9 +108,18 @@
             </div>
             
             <!-- Credentials Form -->
-            <form class="flex flex-col gap-5" action="/auth/login" method="POST">
+            <form id="auth-form" class="flex flex-col gap-5" action="/auth/login" method="POST">
+                <!-- Display Name Field (Hidden for Sign In) -->
+                <div id="display-name-group" class="space-y-1.5 hidden transition-all duration-300">
+                    <label class="font-label-sm text-label-sm text-on-surface-variant block ml-4" for="display_name">Display Name</label>
+                    <div class="input-glow bg-surface-container-low rounded-full h-14 flex items-center px-6 border border-outline-variant/20 focus-within:border-primary/50 transition-all">
+                        <span class="material-symbols-outlined text-on-surface-variant mr-3">badge</span>
+                        <input class="bg-transparent border-none focus:ring-0 w-full text-on-surface placeholder:text-outline/50 font-body-md" id="display_name" name="display_name" placeholder="John Doe" type="text"/>
+                    </div>
+                </div>
+
                 <div class="space-y-1.5">
-                    <label class="font-label-sm text-label-sm text-on-surface-variant ml-4" for="email">Email Address</label>
+                    <label class="font-label-sm text-label-sm text-on-surface-variant block ml-4" for="email">Email Address</label>
                     <div class="input-glow bg-surface-container-low rounded-full h-14 flex items-center px-6 border border-outline-variant/20 focus-within:border-primary/50 transition-all">
                         <span class="material-symbols-outlined text-on-surface-variant mr-3">mail</span>
                         <input class="bg-transparent border-none focus:ring-0 w-full text-on-surface placeholder:text-outline/50 font-body-md" id="email" name="email" placeholder="name@company.com" type="email" required/>
@@ -99,8 +127,8 @@
                 </div>
                 <div class="space-y-1.5">
                     <div class="flex justify-between items-center px-4">
-                        <label class="font-label-sm text-label-sm text-on-surface-variant" for="password">Password</label>
-                        <a class="font-label-sm text-label-sm text-primary hover:underline transition-all" href="#">Forgot?</a>
+                        <label class="font-label-sm text-label-sm text-on-surface-variant block" for="password">Password</label>
+                        <a class="font-label-sm text-label-sm text-primary hover:underline transition-all" id="forgot-link" href="#">Forgot?</a>
                     </div>
                     <div class="input-glow bg-surface-container-low rounded-full h-14 flex items-center px-6 border border-outline-variant/20 focus-within:border-primary/50 transition-all">
                         <span class="material-symbols-outlined text-on-surface-variant mr-3">lock</span>
@@ -110,21 +138,78 @@
                         </button>
                     </div>
                 </div>
-                <button class="w-full h-14 rounded-full bg-gradient-to-r from-primary-container to-secondary-container text-[#001e2c] font-headline-md text-headline-md font-bold mt-4 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-150 btn-glow" type="submit">
+                <button id="submit-btn" class="w-full h-14 rounded-full bg-gradient-to-r from-primary-container to-secondary-container text-[#001e2c] font-headline-md text-headline-md font-bold mt-4 shadow-lg shadow-primary/20 active:scale-[0.98] transition-all duration-150 btn-glow" type="submit">
                     Let's Go!
                 </button>
             </form>
         </div>
         <!-- Footer -->
         <div class="mt-10 text-center">
-            <p class="font-body-md text-body-md text-on-surface-variant">
+            <p class="font-body-md text-body-md text-on-surface-variant" id="footer-text">
                 Don't have an account? 
-                <a class="text-primary font-bold hover:underline ml-1" href="#">Join the community</a>
+                <a class="text-primary font-bold hover:underline ml-1 cursor-pointer" onclick="toggleAuthTab('register')">Join the community</a>
             </p>
         </div>
     </main>
 
     <script>
+        // Tab switching logic (login vs register)
+        function toggleAuthTab(mode) {
+            const tabLogin = document.getElementById('tab-login');
+            const tabRegister = document.getElementById('tab-register');
+            const pill = document.getElementById('auth-tab-pill');
+            const displayNameGroup = document.getElementById('display-name-group');
+            const displayNameInput = document.getElementById('display_name');
+            const submitBtn = document.getElementById('submit-btn');
+            const form = document.getElementById('auth-form');
+            const gatewayTitle = document.getElementById('gateway-title');
+            const gatewaySubtitle = document.getElementById('gateway-subtitle');
+            const forgotLink = document.getElementById('forgot-link');
+            const footerText = document.getElementById('footer-text');
+
+            if (mode === 'register') {
+                // Set pill position to right side
+                pill.style.left = 'calc(50% + 0px)';
+                
+                // Update active tab styles
+                tabLogin.className = "flex-1 z-10 font-label-md text-label-md text-on-surface-variant text-center py-2 rounded-full transition-all duration-200";
+                tabLogin.classList.remove('font-bold', 'text-on-primary-container');
+                tabRegister.className = "flex-1 z-10 font-label-md text-label-md text-on-primary-container font-bold text-center py-2 rounded-full transition-all duration-200";
+
+                // Show Display Name
+                displayNameGroup.classList.remove('hidden');
+                displayNameInput.setAttribute('required', 'required');
+
+                // Adjust text values
+                submitBtn.textContent = "Create My Account";
+                form.action = "/auth/register";
+                gatewayTitle.textContent = "Join the community!";
+                gatewaySubtitle.textContent = "Register below to create a local account.";
+                forgotLink.classList.add('hidden');
+                footerText.innerHTML = `Already have an account? <a class="text-primary font-bold hover:underline ml-1 cursor-pointer" onclick="toggleAuthTab('login')">Sign In</a>`;
+            } else {
+                // Set pill position to left side
+                pill.style.left = '4px';
+
+                // Update active tab styles
+                tabRegister.className = "flex-1 z-10 font-label-md text-label-md text-on-surface-variant text-center py-2 rounded-full transition-all duration-200";
+                tabRegister.classList.remove('font-bold', 'text-on-primary-container');
+                tabLogin.className = "flex-1 z-10 font-label-md text-label-md text-on-primary-container font-bold text-center py-2 rounded-full transition-all duration-200";
+
+                // Hide Display Name
+                displayNameGroup.classList.add('hidden');
+                displayNameInput.removeAttribute('required');
+
+                // Adjust text values
+                submitBtn.textContent = "Let's Go!";
+                form.action = "/auth/login";
+                gatewayTitle.textContent = "Hey there! Great to see you.";
+                gatewaySubtitle.textContent = "Let's get you signed in.";
+                forgotLink.classList.remove('hidden');
+                footerText.innerHTML = `Don't have an account? <a class="text-primary font-bold hover:underline ml-1 cursor-pointer" onclick="toggleAuthTab('register')">Join the community</a>`;
+            }
+        }
+
         // Password visibility toggle
         function togglePasswordVisibility() {
             const pwdInput = document.getElementById('password');

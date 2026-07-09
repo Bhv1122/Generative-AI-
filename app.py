@@ -3,6 +3,8 @@ import uuid
 from functools import wraps
 from flask import Flask, request, jsonify, render_template, redirect, url_for, session, flash
 from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+from authlib.integrations.flask_client import OAuth
 
 # Load environment configuration
 load_dotenv()
@@ -10,6 +12,33 @@ load_dotenv()
 # Initialize Flask app
 app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "secure-dev-session-key-fallback-18239823")
+
+# Initialize OAuth client registry
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('GOOGLE_CLIENT_ID', 'placeholder_google_id'),
+    client_secret=os.getenv('GOOGLE_CLIENT_SECRET', 'placeholder_google_secret'),
+    access_token_url='https://accounts.google.com/o/oauth2/token',
+    access_token_params=None,
+    authorize_url='https://accounts.google.com/o/oauth2/auth',
+    authorize_params=None,
+    api_base_url='https://www.googleapis.com/oauth2/v1/',
+    client_kwargs={'scope': 'openid email profile'},
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+)
+
+github = oauth.register(
+    name='github',
+    client_id=os.getenv('GITHUB_CLIENT_ID', 'placeholder_github_id'),
+    client_secret=os.getenv('GITHUB_CLIENT_SECRET', 'placeholder_github_secret'),
+    access_token_url='https://github.com/login/oauth/access_token',
+    access_token_params=None,
+    authorize_url='https://github.com/login/oauth/authorize',
+    authorize_params=None,
+    api_base_url='https://api.github.com/',
+    client_kwargs={'scope': 'user:email read:user'},
+)
 
 # Import database module
 from database import init_db, get_user, upsert_user, update_user_theme, save_chat_message, get_chat_history, clear_chat_history
@@ -60,13 +89,19 @@ def login():
             flash('Both email and password inputs are required.', 'error')
             return redirect(url_for('login'))
             
-        # Check database or auto-register user for high-fidelity experience
         user = get_user(email)
         if not user:
-            # Create user dynamically with premium visual avatar details
-            avatar_url = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf'
-            display_name = email.split('@')[0].capitalize()
-            user = upsert_user(email, display_name, avatar_url, 'system')
+            flash('Email address is not registered. Please create an account.', 'error')
+            return redirect(url_for('login'))
+            
+        # Verify password if user has a password hash
+        if user.get('password_hash'):
+            if not check_password_hash(user['password_hash'], password):
+                flash('Incorrect password. Please try again.', 'error')
+                return redirect(url_for('login'))
+        else:
+            flash('This account is registered via social sign-in. Please login with Google or GitHub.', 'error')
+            return redirect(url_for('login'))
             
         session['user_email'] = user['email']
         session['display_name'] = user['display_name']
@@ -81,6 +116,107 @@ def login():
         return redirect(url_for('chat'))
         
     return render_template('login.html', theme_preference='system')
+
+@app.route('/auth/register', methods=['POST'])
+def register():
+    email = request.form.get('email', '').strip()
+    password = request.form.get('password', '').strip()
+    display_name = request.form.get('display_name', '').strip()
+    
+    if not email or not password or not display_name:
+        flash('All fields (Email, Display Name, and Password) are required for registration.', 'error')
+        return redirect(url_for('login'))
+        
+    existing_user = get_user(email)
+    if existing_user:
+        flash('This email address is already registered.', 'error')
+        return redirect(url_for('login'))
+        
+    # Hash password
+    pw_hash = generate_password_hash(password)
+    
+    # Default avatar url
+    avatar_url = 'https://lh3.googleusercontent.com/aida-public/AB6AXuCSEkmmpfhz2RW-n5NMsFRT7ZMTNaBmoLdT8bxrCGAJP1k2ZnX4ZFuDCkTqINrUNux_1-qJoM_8tTC3hzoPREZj5VtbtgBnHJc7XmySi-wN6f59XG4ybOuqTNGk68K5Lba6hS7ck6HwbmgpGpgXQFFWmlKJnOn4wEtidVeC9GtJUk82zroHKDF9L8eOmQB1fQYcQffx5nnmzBiMvTnuVRO1S3XArBsAee0i3DcCfttZc-vkurpzybcuYSGsoVUQIsrNfNwvim5Cepcf'
+    
+    # Save user row
+    user = upsert_user(email, display_name, avatar_url, 'system', password_hash=pw_hash)
+    if not user:
+        flash('Registration failed. Please try again.', 'error')
+        return redirect(url_for('login'))
+        
+    # Authenticate and redirect
+    session['user_email'] = user['email']
+    session['display_name'] = user['display_name']
+    session['avatar_url'] = user['avatar_url']
+    
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        
+    return redirect(url_for('chat'))
+
+# OAuth Routing Sequences
+@app.route('/login/google')
+def login_google():
+    redirect_uri = url_for('google_callback', _external=True)
+    return oauth.google.authorize_redirect(redirect_uri)
+
+@app.route('/login/google/callback')
+def google_callback():
+    token = oauth.google.authorize_access_token()
+    user_info = oauth.google.get('userinfo').json()
+    email = user_info.get('email')
+    name = user_info.get('name') or email.split('@')[0].capitalize()
+    picture = user_info.get('picture')
+    
+    user = upsert_user(email, name, picture, 'system')
+    
+    session['user_email'] = user['email']
+    session['display_name'] = user['display_name']
+    session['avatar_url'] = user['avatar_url']
+    
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        
+    return redirect(url_for('chat'))
+
+@app.route('/login/github')
+def login_github():
+    redirect_uri = url_for('github_callback', _external=True)
+    return oauth.github.authorize_redirect(redirect_uri)
+
+@app.route('/login/github/callback')
+def github_callback():
+    token = oauth.github.authorize_access_token()
+    user_resp = oauth.github.get('user')
+    user_info = user_resp.json()
+    
+    email = user_info.get('email')
+    if not email:
+        emails_resp = oauth.github.get('user/emails')
+        emails = emails_resp.json()
+        for e in emails:
+            if e.get('primary') and e.get('verified'):
+                email = e.get('email')
+                break
+        if not email and emails:
+            email = emails[0].get('email')
+    
+    if not email:
+        email = f"{user_info.get('login')}@github.placeholder"
+        
+    name = user_info.get('name') or user_info.get('login')
+    picture = user_info.get('avatar_url')
+    
+    user = upsert_user(email, name, picture, 'system')
+    
+    session['user_email'] = user['email']
+    session['display_name'] = user['display_name']
+    session['avatar_url'] = user['avatar_url']
+    
+    if 'session_id' not in session:
+        session['session_id'] = str(uuid.uuid4())
+        
+    return redirect(url_for('chat'))
 
 @app.route('/auth/logout')
 def logout():
@@ -189,6 +325,10 @@ def api_chat():
                     )
                 )
                 last_role = role
+
+            # Ensure history ends with a model message (or is empty) so next message alternates properly
+            if sdk_history and sdk_history[-1].role == 'user':
+                sdk_history.pop()
 
             # Create the chat conversation session
             chat_session = ai_client.chats.create(
